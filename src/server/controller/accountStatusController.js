@@ -43,9 +43,9 @@ const getAccountBalanceController = async (req, res, next) => {
   }
 
 const processAccountBalance = (recordset) => {
-    const balance = recordset.recordset
-    .map(record => record.eventType === 'CREDIT' ? +record.amount : -record.amount)
-    .reduce((a,b) => a + b);
+    const balance = recordset.recordset.length > 0 ? 
+    recordset.recordset.map(record => record.eventType === 'CREDIT' ? +record.amount : -record.amount).reduce((a,b) => a + b) :
+    0;
 
     return { balance }
 }
