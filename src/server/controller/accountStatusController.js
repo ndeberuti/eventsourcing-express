@@ -1,6 +1,6 @@
 const sql = require("mssql");
 
-const clientMigrationStatusController = async (req, res, next) => {
+const getAccountBalanceController = async (req, res, next) => {
     try {
         console.log('ClientId: ', req.params.id)
         // config for your database
@@ -19,12 +19,14 @@ const clientMigrationStatusController = async (req, res, next) => {
             const request = new sql.Request();
                
             // query to the database and get the records
-            request.query(`select top 1 status from events where clientId = ${req.params.id} and eventType = 'MIGRATION' order by timestamp desc`, function (err, recordset) {
+            request.query(`select * from events where accountId = ${req.params.id}`, function (err, recordset) {
                 
                 if (err) console.log(err);
         
                 // send normalized records as a response
-                res.send(processClientStatus(recordset));
+                const accountBalance = processAccountBalance(recordset);
+                // TODO add snapshot
+                res.send(accountBalance);
              });
         });
      
@@ -33,11 +35,16 @@ const clientMigrationStatusController = async (req, res, next) => {
     }
   }
 
-const processClientStatus = (recordset) => {
-    return recordset.recordset[0];
+const processAccountBalance = (recordset) => {
+    const balance = recordset.recordset
+    .map(record => record.eventType === 'CREDIT' ? +record.amount : -record.amount)
+    .reduce((a,b) => a + b);
+
+    return { balance }
 }
 
 module.exports={
-    clientMigrationStatusController
-  }
+  getAccountBalanceController
+  // TODO add getAccountBalanceOnSpecificDate
+}
   
